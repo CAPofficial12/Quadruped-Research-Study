@@ -1,125 +1,91 @@
 import mujoco
 import mujoco.viewer
 import numpy as np
-import matplotlib.pyplot as plt
 import time
+import matplotlib.pyplot as plt
 
 
 # ============================================================
-# Configuration
+# 1. Define the double pendulum in MJCF
 # ============================================================
 
-SIMULATION_TIME = 30.0
-
-# Pendulum dimensions
-L1 = 1.0       # Length of first pendulum
-L2 = 1.0       # Length of second pendulum
-
-M1 = 1.0       # Mass of first pendulum
-M2 = 1.0       # Mass of second pendulum
-
-G = 9.81
-
-# Initial angles, measured from the downward vertical
-THETA1 = np.radians(-120)
-THETA2 = np.radians(20)
-
-# Simulation timestep
-DT = 0.002
-
-
-# ============================================================
-# MuJoCo model
-# ============================================================
-
-xml = f"""
+xml_model = """
 <mujoco model="double_pendulum">
 
-    <compiler angle="radian"/>
-
-    <option timestep="{DT}" gravity="0 0 -{G}"/>
+    <option timestep="0.002" gravity="0 0 -9.81"/>
 
     <visual>
-        <global offwidth="1280" offheight="720"/>
+        <headlight diffuse="0.8 0.8 0.8"/>
+        <rgba haze="0.15 0.15 0.15 1"/>
     </visual>
 
     <worldbody>
 
-        <!-- Ground/reference -->
+        <!-- Ground -->
         <geom
             name="ground"
             type="plane"
-            pos="0 0 -5"
+            pos="0 0 -2"
             size="5 5 0.1"
-            rgba="0.15 0.15 0.15 1"
+            rgba="0.7 0.7 0.7 1"
+        />
+
+        <!-- Light -->
+        <light
+            pos="0 -2 4"
+            directional="false"
         />
 
         <!-- Fixed pivot -->
-        <body name="pendulum_1" pos="0 0 0">
+        <body name="upper_pendulum" pos="0 0 2">
 
+            <!-- First joint -->
             <joint
-                name="joint_1"
+                name="joint1"
                 type="hinge"
                 axis="0 1 0"
-                pos="0 0 0"
+                damping="0.02"
             />
 
-            <!-- First rod -->
+            <!-- First pendulum rod -->
             <geom
-                name="rod_1"
+                name="rod1"
                 type="capsule"
-                fromto="0 0 0 {L1} 0 0"
-                size="0.035"
-                mass="{M1}"
+                fromto="0 0 0 0 0 -1"
+                size="0.06"
+                mass="1"
+                rgba="0.1 0.3 0.9 1"
             />
 
-            <!-- First mass -->
-            <geom
-                name="mass_1"
-                type="sphere"
-                pos="{L1} 0 0"
-                size="0.10"
-                mass="{M1}"
-            />
-
-            <!-- Second pendulum -->
-            <body name="pendulum_2" pos="{L1} 0 0">
+            <!-- Joint between first and second links -->
+            <body name="lower_pendulum" pos="0 0 -1">
 
                 <joint
-                    name="joint_2"
+                    name="joint2"
                     type="hinge"
                     axis="0 1 0"
-                    pos="0 0 0"
+                    damping="0.02"
                 />
 
-                <!-- Second rod -->
+                <!-- Second pendulum rod -->
                 <geom
-                    name="rod_2"
+                    name="rod2"
                     type="capsule"
-                    fromto="0 0 0 {L2} 0 0"
-                    size="0.035"
-                    mass="{M2}"
-                />
-
-                <!-- Second mass -->
-                <geom
-                    name="mass_2"
-                    type="sphere"
-                    pos="{L2} 0 0"
-                    size="0.12"
-                    mass="{M2}"
-                />
-
-                <!-- End point -->
-                <site
-                    name="end"
-                    pos="{L2} 0 0"
+                    fromto="0 0 0 0 0 -1"
                     size="0.06"
-                    rgba="1 0 0 1"
+                    mass="1"
+                    rgba="0.9 0.2 0.2 1"
+                />
+
+                <!-- Endpoint used for trajectory tracking -->
+                <site
+                    name="pendulum_end"
+                    pos="0 0 -1"
+                    size="0.10"
+                    rgba="0.2 1 0.2 1"
                 />
 
             </body>
-
         </body>
 
     </worldbody>
@@ -129,121 +95,203 @@ xml = f"""
 
 
 # ============================================================
-# Create model and data
+# 2. Load MuJoCo model
 # ============================================================
 
-model = mujoco.MjModel.from_xml_string(xml)
+model = mujoco.MjModel.from_xml_string(xml_model)
 data = mujoco.MjData(model)
 
-# Set initial conditions
-data.qpos[0] = THETA1
-data.qpos[1] = THETA2
 
-data.qvel[:] = 0
+# ============================================================
+# 3. Initial conditions
+# ============================================================
 
-# Forward dynamics once before starting
+# First pendulum angle
+data.qpos[0] = np.radians(120)
+
+# Second pendulum angle
+data.qpos[1] = np.radians(-20)
+
+# Initial angular velocities
+data.qvel[0] = 0.0
+data.qvel[1] = 0.0
+
+# Forward dynamics so MuJoCo knows the initial positions
 mujoco.mj_forward(model, data)
 
 
 # ============================================================
-# Storage for trajectory
+# 4. Find the endpoint site
 # ============================================================
 
-trajectory_x = []
-trajectory_y = []
-trajectory_t = []
-
-start_time = time.time()
+site_id = mujoco.mj_name2id(
+    model,
+    mujoco.mjtObj.mjOBJ_SITE,
+    "pendulum_end"
+)
 
 
 # ============================================================
-# Run simulation
+# 5. Data for trajectory
 # ============================================================
+
+x_data = []
+z_data = []
+time_data = []
+
+
+# ============================================================
+# 6. Matplotlib setup
+# ============================================================
+
+plt.ion()
+
+fig, ax = plt.subplots(figsize=(7, 7))
+
+line, = ax.plot(
+    [],
+    [],
+    linewidth=1.5,
+    label="End-point trajectory"
+)
+
+point, = ax.plot(
+    [],
+    [],
+    "o",
+    markersize=6,
+    label="Pendulum end"
+)
+
+ax.set_title("Double Pendulum Trajectory")
+ax.set_xlabel("X position (m)")
+ax.set_ylabel("Z position (m)")
+
+ax.set_xlim(-4, 4)
+ax.set_ylim(-4, -1)
+
+ax.set_aspect("equal")
+ax.grid(True)
+ax.legend()
+
+
+# ============================================================
+# 7. Run MuJoCo simulation
+# ============================================================
+
+simulation_duration = 30.0
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
 
+    # Camera setup
+    viewer.cam.lookat[:] = [0, 0, 1]
+    viewer.cam.distance = 4.5
+    viewer.cam.azimuth = 90
+    viewer.cam.elevation = -10
+
+    start_time = time.perf_counter()
+
     while viewer.is_running():
 
-        # Stop after 30 seconds of simulated time
-        if data.time >= SIMULATION_TIME:
-            break
+        # ----------------------------------------------------
+        # Advance simulation
+        # ----------------------------------------------------
 
-        # Advance MuJoCo
         mujoco.mj_step(model, data)
 
         # ----------------------------------------------------
-        # Get position of the end of the second pendulum
+        # Get endpoint position
         # ----------------------------------------------------
 
-        site_id = mujoco.mj_name2id(
-            model,
-            mujoco.mjtObj.mjOBJ_SITE,
-            "end"
-        )
+        position = data.site_xpos[site_id]
 
-        end_position = data.site_xpos[site_id]
+        x = position[0]
+        z = position[2]
 
-        x = end_position[0]
-        y = end_position[2]
-
-        trajectory_x.append(x)
-        trajectory_y.append(y)
-        trajectory_t.append(data.time)
+        t = data.time
 
         # ----------------------------------------------------
-        # Update viewer
+        # Store trajectory
+        # ----------------------------------------------------
+
+        x_data.append(x)
+        z_data.append(z)
+        time_data.append(t)
+
+        # ----------------------------------------------------
+        # Update MuJoCo viewer
         # ----------------------------------------------------
 
         viewer.sync()
 
-        # Run approximately in real time
-        time.sleep(DT * 0.5)
+        # ----------------------------------------------------
+        # Update Matplotlib occasionally
+        # ----------------------------------------------------
+
+        if len(x_data) % 20 == 0:
+
+            line.set_data(x_data, z_data)
+            point.set_data([x], [z])
+
+            fig.canvas.draw_idle()
+            fig.canvas.flush_events()
+
+        # ----------------------------------------------------
+        # Run in approximately real time
+        # ----------------------------------------------------
+
+        elapsed = time.perf_counter() - start_time
+
+        if t > elapsed:
+            time.sleep(t - elapsed)
+
+        # ----------------------------------------------------
+        # Stop after 30 seconds
+        # ----------------------------------------------------
+
+        if t >= simulation_duration:
+            break
 
 
 # ============================================================
-# Matplotlib trajectory plot
+# 8. Final trajectory plot
 # ============================================================
 
-plt.figure(figsize=(10, 8))
+plt.ioff()
 
-plt.plot(
-    trajectory_x,
-    trajectory_y,
-    linewidth=1.0
+fig2, ax2 = plt.subplots(figsize=(8, 8))
+
+ax2.plot(
+    x_data,
+    z_data,
+    linewidth=1.2
 )
 
-# Mark starting point
-plt.scatter(
-    trajectory_x[0],
-    trajectory_y[0],
-    s=60,
+# Starting point
+ax2.plot(
+    x_data[0],
+    z_data[0],
+    "go",
     label="Start"
 )
 
-# Mark final point
-plt.scatter(
-    trajectory_x[-1],
-    trajectory_y[-1],
-    s=60,
+# Final point
+ax2.plot(
+    x_data[-1],
+    z_data[-1],
+    "ro",
     label="End"
 )
 
-# Mark pivot
-plt.scatter(
-    0,
-    0,
-    s=80,
-    marker="x",
-    label="Pivot"
+ax2.set_title(
+    "Double Pendulum End-Point Trajectory — 30 Seconds"
 )
 
-plt.xlabel("X position (m)")
-plt.ylabel("Z position (m)")
-plt.title("Double Pendulum End-Effector Trajectory")
+ax2.set_xlabel("X position (m)")
+ax2.set_ylabel("Z position (m)")
 
-plt.axis("equal")
-plt.grid(True)
-plt.legend()
+ax2.set_aspect("equal")
+ax2.grid(True)
+ax2.legend()
 
-plt.tight_layout()
 plt.show()
