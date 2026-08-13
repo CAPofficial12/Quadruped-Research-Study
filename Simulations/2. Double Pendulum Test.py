@@ -99,9 +99,9 @@ site_id = mujoco.mj_name2id(
 # 4. EXPERIMENT PARAMETERS
 # ============================================================
 
-NUMBER_OF_RUNS = 20
+NUMBER_OF_RUNS = 2
 
-SIMULATION_TIME = 30.0
+SIMULATION_TIME = 60.0
 
 DT = 0.001
 
@@ -120,7 +120,7 @@ INITIAL_THETA_2 = -20.0
 
 # Difference between runs
 
-ANGLE_STEP = 0.001
+ANGLE_STEP = 0.02
 
 
 # ============================================================
