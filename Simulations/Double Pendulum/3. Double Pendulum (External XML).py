@@ -9,7 +9,9 @@ script_dir = Path(__file__).resolve().parent
 
 def run_sim(test_num, q1, q2, duration):
 
-    model = mujoco.MjModel.from_xml_path("Double Pendulum/Double.xml")
+    xml_path = script_dir / "Double.xml"
+
+    model = mujoco.MjModel.from_xml_path(str(xml_path))
     data = mujoco.MjData(model)
     weightID = mujoco.mj_name2id(
         model,
@@ -53,8 +55,8 @@ def run_sim(test_num, q1, q2, duration):
             elapsed = time.time() - start_time
             target = data.time
 
-            #if target > elapsed:
-            #    time.sleep(target - elapsed)
+            if target > elapsed:
+                time.sleep(target - elapsed)
 
             if data.time > duration:
                 break
