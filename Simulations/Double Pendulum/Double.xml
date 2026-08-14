@@ -1,0 +1,26 @@
+<mujoco model="Double">
+    <compiler angle="radian" />
+    <asset>
+        <mesh name="Top_Cycinder_1" file="meshes/Top_Cycinder_1.stl" scale="0.001 0.001 0.001" />
+        <mesh name="Bottom_Cyclinder_1" file="meshes/Bottom_Cyclinder_1.stl" scale="0.001 0.001 0.001" />
+        <mesh name="base_link" file="meshes/base_link.stl" scale="0.001 0.001 0.001" />
+    </asset>
+    <worldbody>
+        <light directional="true" pos="-0.5 0.5 3" dir="0 0 -1" />
+        <geom pos="0 0 0" size="1 1 1" type="plane" rgba="1 0.83 0.61 0.5" />
+        <body name="base_link" pos="0.0 0.0 0.0" euler="-0.0 0.0 -0.0">
+            <geom name="base_link_geom" type="mesh" mesh="base_link" pos="0 0 0" euler="0 0 0" />
+            <inertial mass="0.1180060740504666" pos="-0.0024999999999999025 0.45500000000000007 0.0" fullinertia="3.687689814077175e-05 1.8684295057989752e-05 1.8684295057993378e-05 -2.710505431213761e-20 1.0675904604795506e-21 -2.5622171051509212e-20" />
+            <body name="Top_Cycinder_1" pos="-6.938893903907226e-19 0.8759267061329229 0.17275910414241138" euler="-2.7521311078873274 -1.97370525522619e-17 -2.4530464532077867e-18">
+                <joint name="base_link_Revolute-3" type="hinge" axis="1.0 2.4530464532077867e-18 -1.9737052552261904e-17" pos="-4.222467458188171e-19 0.45500000000000074 -8.326672684688674e-17" />
+                <geom name="Top_Cycinder_1_geom" type="mesh" mesh="Top_Cycinder_1" pos="0 0 0" euler="0 0 0" />
+                <inertial mass="0.6551165985317337" pos="-0.002499999999999908 0.35499999999953036 2.7755575615628914e-17" fullinertia="0.0023949601274016463 0.00021908189960874078 0.0021786078802868603 2.6254297389265325e-19 5.131153128674366e-20 -3.144186300207963e-18" />
+                <body name="Bottom_Cyclinder_1" pos="0.0009532517509309644 0.03709371542418651 0.1304689092444993" euler="-0.5421994329769559 3.859087564923506e-17 -9.331223381806918e-17">
+                    <joint name="Top_Cycinder_1_Revolute-2" type="hinge" axis="1.0 1.0559819197011726e-16 2.295041809075977e-17" pos="-0.005953251750930988 0.2539776965044969 0.0006877819272822217" />
+                    <geom name="Bottom_Cyclinder_1_geom" type="mesh" mesh="Bottom_Cyclinder_1" pos="0 0 0" euler="0 0 0" />
+                    <inertial mass="1.8008271134487048" pos="0.000962058911074661 0.16567176243582116 0.0006877563490109082" fullinertia="0.010542584438771874 0.0004956340949047747 0.010063751766945602 9.297976772528595e-05 3.3881317890172014e-20 -7.128629284092192e-18" />
+                </body>
+            </body>
+        </body>
+    </worldbody>
+</mujoco>
