@@ -19,6 +19,7 @@ def run_sim(test_num, q1, q2, duration):
         "weight"
     )
     result = []
+    v = np.zeros(6)
 
     data.qpos[0] = q1 + np.pi/2
     data.qpos[1] = q2
@@ -37,8 +38,16 @@ def run_sim(test_num, q1, q2, duration):
 
             mujoco.mj_step(model, data)
 
-            ax, ay, az, vx, vy, vz = data.cvel[weightID]
-            speed = (vx**2 + vy**2 + vz**2)**0.5
+            mujoco.mj_objectVelocity(
+                model,
+                data,
+                mujoco.mjtObj.mjOBJ_BODY,
+                weightID,
+                v,
+                0
+            )
+            vx, vy, vz = v[0:3]
+            speed = np.linalg.norm(v[0:3])
 
             result.append([
                 data.time,
@@ -55,8 +64,8 @@ def run_sim(test_num, q1, q2, duration):
             elapsed = time.time() - start_time
             target = data.time
 
-            if target > elapsed:
-                time.sleep(target - elapsed)
+            #if target > elapsed:
+            #    time.sleep(target - elapsed)
 
             if data.time > duration:
                 break
