@@ -1,6 +1,6 @@
 <mujoco model="Double">
     <compiler angle="radian" />
-    <option timestep = "0.0"
+    <option timestep = "0.002"
             gravity = "0 0 -9.81" />
     <worldbody>
 
@@ -9,7 +9,7 @@
             <joint name = "top_hinge"
                     type = "hinge"
                     axis = "1 0 0"
-                    damping = "0.00"/>
+                    damping = "0.01"/>
             
             <geom type = "capsule"
                 fromto = "0 0 0 0 0 -1"
@@ -22,7 +22,7 @@
                 <joint name = "bottom_hinge"
                         type = "hinge"
                         axis = "1 0 0"
-                        damping = "0.00"/>
+                        damping = "0.01"/>
                 
                 <geom type = "capsule"
                     fromto = "0 0 0 0 0 -1"
