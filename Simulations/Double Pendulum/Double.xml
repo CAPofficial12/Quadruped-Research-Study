@@ -1,7 +1,8 @@
 <mujoco model="Double">
     <compiler angle="radian" />
     <option timestep = "0.002"
-            gravity = "0 0 -9.81" />
+            gravity = "0 0 -9.81" 
+            integrator = "RK4"/>
     <worldbody>
 
         <body name="link1" pos = "0 0 2">

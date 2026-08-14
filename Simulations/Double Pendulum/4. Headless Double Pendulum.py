@@ -1,5 +1,4 @@
 import mujoco
-import mujoco.viewer
 import time
 import numpy as np
 import csv
@@ -19,7 +18,8 @@ def run_sim(test_num, q1, q2, duration):
         "weight"
     )
     result = []
-    v = np.zeros(6)
+    vel = np.zeros(6)
+    acc = np.zeros(6)
 
     data.qpos[0] = q1 + np.pi/2
     data.qpos[1] = q2
@@ -31,16 +31,28 @@ def run_sim(test_num, q1, q2, duration):
 
         mujoco.mj_step(model, data)
 
+        x, y, z = data.xpos[weightID].copy()
         mujoco.mj_objectVelocity(
                 model,
                 data,
                 mujoco.mjtObj.mjOBJ_BODY,
                 weightID,
-                v,
+                vel,
                 0
-            )
-        vx, vy, vz = v[0:3]
-        speed = np.linalg.norm(v[0:3])
+        )
+
+        mujoco.mj_objectAcceleration(
+            model,
+            data,
+            mujoco.mjtObj.mjOBJ_BODY,
+            weightID,
+            acc,
+            0
+        )
+        
+        mujoco.mj_energyVel(model, data)
+        mujoco.mj_energyPos(model, data)
+        
 
         result.append([
                 data.time,
@@ -48,15 +60,24 @@ def run_sim(test_num, q1, q2, duration):
                 data.qpos[1],
                 data.qvel[0],
                 data.qvel[1],
-                vx,
-                vy,
-                vz,
-                speed
+                x,
+                y,
+                z,
+                vel[3],
+                vel[4],
+                vel[5],
+                acc[3],
+                acc[4],
+                acc[5],
+                data.energy[1],
+                data.energy[0],
+                data.energy[0] + data.energy[1]
             ])
     
 
-    csv_path = script_dir / "Results" / f"Double Pendulum. Test {test_num}.csv"
-    with open(csv_path, "w", newline="\n") as file:
+    #Adds Full results run timestamp results to Folder
+    csv_fullpath = script_dir / "Full Results" / f"Double Pendulum. Test {test_num}.csv"
+    with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
 
         writer.writerow([
@@ -68,15 +89,22 @@ def run_sim(test_num, q1, q2, duration):
             "weight_x",
             "weight_y",
             "weight_z",
-            "weight_dot"
+            "weight_velx",
+            "weight_vely",
+            "weight_velz",
+            "weight_ax",
+            "weight_ay",
+            "weight_az",
+            "kinetic energy",
+            "potential energy",
+            "total energy"
         ])
 
         writer.writerows(result)
-    print("Data exported to CSV File")
 
 t = 0
-for q1 in np.arange(0.0,0.1, 0.001):
-    for q2 in np.arange(0.0,0.1, 0.001):
+for q1 in np.arange(0.0,1.5, 0.05):
+    for q2 in np.arange(0.0,1.5, 0.05):
         t += 1
-        run_sim(t, q1, q2, 30)
+        run_sim(t, q1, q2, 15)
         print("Completed Test: ", t)
