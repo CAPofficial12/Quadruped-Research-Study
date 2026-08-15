@@ -12,17 +12,13 @@ from pathlib import Path
 script_dir = Path(__file__).resolve().parent
 csv_fullpath = script_dir /"Summary"/f"Double Pendulum Mass Summary Statistics.csv"
 df = pd.read_csv(csv_fullpath)
+IV = "weight_mass"
 
-control = [
-    "gravity",
-    "q1_initial",
-    "q2_initial",
-    "q1_length",
-    "q2_length",
-    "q1_dampening",
-    "q2_dampening",
-    "simulation_duration",
-    "timestep"
-]
-for ctrl in control:
-    print(np.max(np.diff(df[ctrl])))
+print(df[IV].describe())
+print(df[IV].value_counts().sort_index())
+
+plt.hist(df[IV], bins=20)
+plt.plot(df["test_id"], df[IV])
+plt.xlabel("Mass")
+plt.ylabel("Number of Simulations")
+plt.show()
