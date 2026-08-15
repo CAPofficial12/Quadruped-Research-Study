@@ -10,7 +10,7 @@ import statsmodels.formula.api as smf
 from pathlib import Path
 
 script_dir = Path(__file__).resolve().parent
-csv_fullpath = script_dir /"Summary"/f"Double Pendulum Mass Summary Statistics.csv"
+csv_fullpath = script_dir /f"Double Pendulum Mass Summary Statistics.csv"
 df = pd.read_csv(csv_fullpath)
 IV = "weight_mass"
 
@@ -25,3 +25,8 @@ primary_dvs = ["total_energy_relative_loss",
                   "q1_acceleration_max_abs",
                   "q2_acceleration_max_abs"]
 df_valid = df[df["valid"] == 1].copy
+
+grouped = df.groupby(IV)[primary_dvs].agg(
+    ["mean", "std", "median", "count"]
+)
+grouped.to_csv("DV_summary.csv")
