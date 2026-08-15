@@ -10,13 +10,14 @@ def CSV_read(test_num):
     csv_fullpath = script_dir / "Full Results" / f"Double Pendulum. Test {test_num}.csv"
     return pd.read_csv(csv_fullpath)
 
+
 def intro(test_num):
     df = CSV_read(test_num)
     q1_initial = df["q1"].iat[0]
     q2_initial = df["q2"].iat[0]
     sim_time = df["time"].iat[-1] - df["time"].iat[0]
     time_step = df["time"].diff().mean()
-    valid = True
+    valid = (sim_time/time_step)+1 ==  len(df)
     initial_state = [test_num, q1_initial, q2_initial, sim_time, time_step, valid]
     return initial_state
 
@@ -28,17 +29,17 @@ def Motion_Stats(values):
     LQ, UQ = np.quantile(values, [0.25, 0.75], method="linear")
     IQR = UQ - LQ
 
-    greatest = np.max(np.abs(values))
+    greatest = np.max(values)
     stats = [mean, std, median, IQR, greatest]
     return stats
 
 def Energy(energy):
     initial =energy.iat[0]
-    final = energy.iat[-1]
+    final = energy.iat[0]
     std = np.std(energy)
     mean = np.mean(energy)
     least = np.min(energy)
-    greatest = np.max(np.abs(energy))
+    greatest = np.max(energy)
     energy = [initial, final, std, mean, least, greatest]
     return energy
 
@@ -47,8 +48,7 @@ def dom_frep(joint, time):
     n = len(angles)
     dt = time.diff().median()
     frequencies = np.fft.rfftfreq(n, d=dt)
-    window = signal.windows.hann(n)
-    fft_val = np.fft.rfft(angles * window)
+    fft_val = np.fft.rfft(angles)
     power = np.abs(fft_val)**2
     power[0] = 0
     dominant_index = np.argmax(power)
@@ -56,15 +56,16 @@ def dom_frep(joint, time):
     return dominant_frequency
 
 def decay(joint, time):
-    amplitude = np.abs(joint)
+    peaks, _ = signal.find_peaks(joint, prominence=0.01)
 
-    peaks, _ = signal.find_peaks(
-        amplitude,
-        prominence=0.01
-    )
+    peak_times = time[peaks]
+    peak_values = joint[peaks]
 
-    peak_times = time.iloc[peaks].to_numpy()
-    peak_values = amplitude.iloc[peaks].to_numpy()
+    # Only positive amplitudes can be log-transformed
+    valid = peak_values > 0
+
+    peak_times = peak_times[valid]
+    peak_values = peak_values[valid]
 
     log_amplitude = np.log(peak_values)
 
@@ -76,7 +77,7 @@ def decay(joint, time):
     decay_rate = -slope
     return decay_rate
 
-def oscillations(joint, time):
+def oscillations(test_num, joint, time):
     dom_q1 = dom_frep(joint, time)
     peaks, prop = signal.find_peaks(joint, prominence = 0.01)
     oscil_count = len(peaks)
@@ -99,11 +100,10 @@ def summary(test_num):
         df["weight_z"].diff()**2
     )
     trajectory_length = step_distance.sum()
-    weight.append(displacement.iloc[-1])
-    weight.append(trajectory_length)
+    weight += displacement[0] + trajectory_length
 
     #Weight Speed
-    speed = np.sqrt((df["weight_velx"])**2 + (df["weight_vely"])**2 + (df["weight_velz"])**2)
+    speed = np.sqrt((df["weight_vx"])**2 + (df["weight_vy"])**2 + (df["weight_vz"])**2)
     weight_velocity = Motion_Stats(speed)
 
     #Weight Acceleration
@@ -140,14 +140,12 @@ def summary(test_num):
     Aq2_final = df["q2_ddot"].iat[-1]
     final_state = [q1_final, q2_final, Vq1_final, Vq2_final, Aq1_final, Aq2_final]
 
-    
-    all = (initial , weight , weight_velocity, weight_acc, q1, q2, q1_v, q2_v, q1_acc, q2_acc, Kinetic, Potential, Total, Spring_q1, Spring_q2, final_state)
-    result = np.concatenate(all)
-    return result
+    result = []
+    result =  initial+ weight + weight_velocity+ weight_acc+ q1+ q2+ q1_v+ q2_v+ q1_acc+ q2_acc+ Kinetic+ Potential+ Total+ Spring_q1+ Spring_q2+ final_state
 
 def main():
     script_dir = Path(__file__).resolve().parent
-    csv_fullpath = script_dir / f"Double Pendulum.csv"
+    csv_fullpath = script_dir / f"Double Pendulum Summary Stats.csv"
     with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
         writer.writerow([
@@ -157,6 +155,7 @@ def main():
             "simulation_duration",
             "timestep",
             "valid",
+
             "weight_displacement_mean",
             "weight_displacement_std",
             "weight_displacement_median",
@@ -164,70 +163,84 @@ def main():
             "weight_displacement_max",
             "weight_displacement_final",
             "trajectory_length",
+
             "speed_mean",
             "speed_std",
             "speed_median",
             "speed_iqr",
             "speed_max",
+
             "acceleration_mean",
             "acceleration_std",
             "acceleration_median",
             "acceleration_iqr",
             "acceleration_max",
+
             "q1_mean",
             "q1_std",
             "q1_median",
             "q1_iqr",
             "q1_max_abs",
+
             "q2_mean",
             "q2_std",
             "q2_median",
             "q2_iqr",
             "q2_max_abs",
+
             "q1_velocity_mean",
             "q1_velocity_std",
             "q1_velocity_median",
             "q1_velocity_iqr",
             "q1_velocity_max_abs",
+
             "q2_velocity_mean",
             "q2_velocity_std",
             "q2_velocity_median",
             "q2_velocity_iqr",
             "q2_velocity_max_abs",
+
             "q1_acceleration_mean",
             "q1_acceleration_std",
             "q1_acceleration_median",
             "q1_acceleration_iqr",
             "q1_acceleration_max_abs",
+
             "q2_acceleration_mean",
             "q2_acceleration_std",
             "q2_acceleration_median",
             "q2_acceleration_iqr",
             "q2_acceleration_max_abs",
+
             "initial_kinetic_energy",
             "final_kinetic_energy",
             "kinetic_energy_std",
             "kinetic_energy_mean",
             "kinetic_energy_min",
             "kinetic_energy_max",
+
             "initial_potential_energy",
             "final_potential_energy",
             "potential_energy_std",
             "potential_energy_mean",
             "potential_energy_min",
             "potential_energy_max",
+
             "initial_total_energy",
             "final_total_energy",
             "total_energy_std",
             "total_energy_mean",
             "total_energy_min",
             "total_energy_max",
+
             "q1_dominant_frequency",
             "q1_oscillation_count",
             "q1_decay_rate",
+
             "q2_dominant_frequency",
             "q2_oscillation_count",
             "q2_decay_rate",
+
             "final_q1",
             "final_q2",
             "final_q1_velocity",
@@ -239,4 +252,8 @@ def main():
         for i in range(1, 901):
             result = summary(i)
             writer.writerow(result)
-main()
+
+result = summary(1)
+
+print("Number of columns:", len(result))
+print("Number of headers:", len(result.columns))
