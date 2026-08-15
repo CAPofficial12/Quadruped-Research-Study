@@ -13,6 +13,16 @@ script_dir = Path(__file__).resolve().parent
 csv_fullpath = script_dir /"Summary"/f"Double Pendulum Mass Summary Statistics.csv"
 df = pd.read_csv(csv_fullpath)
 
-print(df.shape)
-print(df.head())
-print(df.info())
+control = [
+    "gravity",
+    "q1_initial",
+    "q2_initial",
+    "q1_length",
+    "q2_length",
+    "q1_dampening",
+    "q2_dampening",
+    "simulation_duration",
+    "timestep"
+]
+for ctrl in control:
+    print(np.max(np.diff(df[ctrl])))
