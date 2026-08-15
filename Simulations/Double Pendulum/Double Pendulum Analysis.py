@@ -39,16 +39,21 @@ def Energy(energy):
     mean = np.mean(energy)
     least = np.min(energy)
     greatest = np.max(np.abs(energy))
-    energy = [initial, final, std, mean, least, greatest]
+    loss = final - initial
+    relative_loss = loss/abs(initial)
+    energy = [initial, final, std, mean, least, greatest, loss, relative_loss]
     return energy
 
 def dom_frep(joint, time):
+    dt = np.mean(np.diff(time))
+
     angles = signal.detrend(joint)
     n = len(angles)
-    dt = time.diff().median()
-    frequencies = np.fft.rfftfreq(n, d=dt)
+
     window = signal.windows.hann(n)
+    frequencies = np.fft.rfftfreq(n, d=dt)
     fft_val = np.fft.rfft(angles * window)
+
     power = np.abs(fft_val)**2
     power[0] = 0
     dominant_index = np.argmax(power)
@@ -56,32 +61,53 @@ def dom_frep(joint, time):
     return dominant_frequency
 
 def decay(joint, time):
-    amplitude = np.abs(joint)
+    peaks,_= signal.find_peaks(joint, prominence = 0.01)
+    peak_time = time[peaks]
 
-    peaks, _ = signal.find_peaks(
-        amplitude,
-        prominence=0.01
-    )
+    amp = np.abs(joint)
+    amp_peak,_ = signal.find_peaks(amp, prominence = 0.01)
+    peak_amp = amp[amp_peak]
 
-    peak_times = time.iloc[peaks].to_numpy()
-    peak_values = amplitude.iloc[peaks].to_numpy()
+    pos_amp = peak_amp > 0
+    peak_time_decay = peak_time[pos_amp]
+    peak_amp_decay = peak_amp[pos_amp]
 
-    log_amplitude = np.log(peak_values)
+    log_amp = np.log(peak_amp_decay)
 
-    slope, intercept, r_value, p_value, std_err = stats.linregress(
-        peak_times,
-        log_amplitude
-    )
+    regression = stats.linregress(peak_time_decay,log_amp)
+
+    slope = regression.slope
+    r_value = regression.rvalue
 
     decay_rate = -slope
-    return decay_rate
+    decay_r2 = r_value ** 2
+
+    decays = [decay, decay_r2]
+    return decays
 
 def oscillations(joint, time):
-    dom_q1 = dom_frep(joint, time)
-    peaks, prop = signal.find_peaks(joint, prominence = 0.01)
+    dom_frequency = dom_frep(joint, time)
+
+    peaks,_= signal.find_peaks(joint, prominence = 0.01)
     oscil_count = len(peaks)
-    rate = decay(joint, time)
-    spring = [dom_q1, oscil_count, rate]
+
+    peak_time = time[peaks]
+    period = np.diff(peak_time)
+    mean_period = np.mean(period)
+    period_std = np.std(period)
+
+    amp = np.abs(joint)
+    amp_peak,_ = signal.find_peaks(amp, prominence = 0.01)
+    peak_amp = amp[amp_peak]
+
+    init_Pamp = peak_amp[0]
+    final_Pamp = peak_amp[-1]
+    mean_Pamp = np.mean(peak_amp)
+    std_Pamp = np.std(peak_amp)
+
+    r = decay(joint, time, peak_amp)[0]
+    r2 = decay(joint, time, peak_amp)[1]
+    spring = [dom_frequency, oscil_count, r, r2, init_Pamp, final_Pamp, mean_Pamp,std_Pamp, mean_period, period_std]
     return spring
 
 def summary(test_num):
@@ -157,6 +183,7 @@ def main():
             "simulation_duration",
             "timestep",
             "valid",
+
             "weight_displacement_mean",
             "weight_displacement_std",
             "weight_displacement_median",
@@ -164,70 +191,104 @@ def main():
             "weight_displacement_max",
             "weight_displacement_final",
             "trajectory_length",
+
             "speed_mean",
             "speed_std",
             "speed_median",
             "speed_iqr",
             "speed_max",
+
             "acceleration_mean",
             "acceleration_std",
             "acceleration_median",
             "acceleration_iqr",
             "acceleration_max",
+
             "q1_mean",
             "q1_std",
             "q1_median",
             "q1_iqr",
             "q1_max_abs",
+
             "q2_mean",
             "q2_std",
             "q2_median",
             "q2_iqr",
             "q2_max_abs",
+
             "q1_velocity_mean",
             "q1_velocity_std",
             "q1_velocity_median",
             "q1_velocity_iqr",
             "q1_velocity_max_abs",
+
             "q2_velocity_mean",
             "q2_velocity_std",
             "q2_velocity_median",
             "q2_velocity_iqr",
             "q2_velocity_max_abs",
+
             "q1_acceleration_mean",
             "q1_acceleration_std",
             "q1_acceleration_median",
             "q1_acceleration_iqr",
             "q1_acceleration_max_abs",
+
             "q2_acceleration_mean",
             "q2_acceleration_std",
             "q2_acceleration_median",
             "q2_acceleration_iqr",
             "q2_acceleration_max_abs",
+
             "initial_kinetic_energy",
             "final_kinetic_energy",
             "kinetic_energy_std",
             "kinetic_energy_mean",
             "kinetic_energy_min",
             "kinetic_energy_max",
+            "kinetic_energy_loss",
+            "kinetic_energy_relative_loss"
+
             "initial_potential_energy",
             "final_potential_energy",
             "potential_energy_std",
             "potential_energy_mean",
             "potential_energy_min",
             "potential_energy_max",
+            "potential_energy_loss",
+            "potential_energy_relative_loss"
+
             "initial_total_energy",
             "final_total_energy",
             "total_energy_std",
             "total_energy_mean",
             "total_energy_min",
             "total_energy_max",
+            "total_energy_loss",
+            "total_energy_relative_loss"
+
             "q1_dominant_frequency",
             "q1_oscillation_count",
             "q1_decay_rate",
+            "q1_decay_r2",
+            "q1_peak_amplitude_initial",
+            "q1_peak_amplitude_final",
+            "q1_peak_amplitude_mean",
+            "q1_peak_amplitude_std",
+            "q1_mean_period",
+            "q1_period_std",
+
             "q2_dominant_frequency",
             "q2_oscillation_count",
             "q2_decay_rate",
+            "q2_decay_r2",
+            "q2_peak_amplitude_initial",
+            "q2_peak_amplitude_final",
+            "q2_peak_amplitude_mean",
+            "q2_peak_amplitude_std",
+            "q2_mean_period",
+            "q2_period_std",
+
             "final_q1",
             "final_q2",
             "final_q1_velocity",
