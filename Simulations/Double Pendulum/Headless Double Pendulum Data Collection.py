@@ -159,4 +159,9 @@ def run_sim(test_num, g, m, l1, l2 , c1, c2, q1, q2, duration):
         ])
 
         writer.writerows(result)
-run_sim(1, 9.81, 2, 1, 1, 0.01, 0.01, np.pi/2, np.pi/2, 15)
+t = 0
+for mass in np.arange(0, 10, 0.01):
+    t += 1
+    run_sim(t, 9.81, mass, 1, 1, 0.01, 0.01, np.pi/2, np.pi/2, 15)
+    print("Completed Test", t, end="; ")
+    print("Mass =", mass)

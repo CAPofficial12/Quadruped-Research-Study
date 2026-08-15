@@ -35,7 +35,7 @@
                     <geom type="sphere" 
                     size="0.15" 
                     rgba = "0.8 0.8 0.8 1"
-                    mass = "2"/>
+                    mass = "9.99"/>
                 </body>
             </body>
         </body>

@@ -4,21 +4,27 @@ import numpy as np
 import pandas as pd
 from scipy import signal, stats
 
+IV = "Mass"
 
 def CSV_read(test_num):
     script_dir = Path(__file__).resolve().parent
-    csv_fullpath = script_dir / "Full Gravity Results" / f"Double Pendulum. Test {test_num}.csv"
+    csv_fullpath = script_dir / f"Full {IV} Results" / f"Double Pendulum. Test {test_num}.csv"
     return pd.read_csv(csv_fullpath)
 
 def intro(test_num):
     df = CSV_read(test_num)
     gravi = df["gravity"].iat[0]
+    mass = df["weight_mass"].iat[0]
     q1_initial = df["q1"].iat[0]
     q2_initial = df["q2"].iat[0]
+    l1 = df["q1_length"].iat[0]
+    l2 = df["q2_length"].iat[0]
+    c1 = df["q1_dampening"].iat[0]
+    c2 = df["q2_dampening"].iat[0]
     sim_time = df["time"].iat[-1] - df["time"].iat[0]
     time_step = df["time"].diff().mean()
     valid = True
-    initial_state = [test_num, gravi, q1_initial, q2_initial, sim_time, time_step, valid]
+    initial_state = [test_num, gravi, mass, q1_initial, q2_initial, l1, l2, c1, c2, sim_time, time_step, valid]
     return initial_state
 
 def Motion_Stats(values):
@@ -183,14 +189,19 @@ def summary(test_num):
 
 def main():
     script_dir = Path(__file__).resolve().parent
-    csv_fullpath = script_dir / f"Double Pendulum Gravity Summary Statistics.csv"
+    csv_fullpath = script_dir /"Summary"/f"Double Pendulum {IV} Summary Statistics.csv"
     with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
         writer.writerow([
             "test_id",
             "gravity",
+            "weight_mass",
             "q1_initial",
             "q2_initial",
+            "q1_length",
+            "q2_length",
+            "q1_dampening",
+            "q2_dampening",
             "simulation_duration",
             "timestep",
             "valid",
