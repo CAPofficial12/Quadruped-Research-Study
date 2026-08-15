@@ -173,7 +173,7 @@ def summary(test_num):
 
 def main():
     script_dir = Path(__file__).resolve().parent
-    csv_fullpath = script_dir / f"Double Pendulum.csv"
+    csv_fullpath = script_dir / f"Double Pendulum Summary Statistics.csv"
     with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
         writer.writerow([
