@@ -24,3 +24,4 @@ primary_dvs = ["total_energy_relative_loss",
                   "q2_velocity_max_abs",
                   "q1_acceleration_max_abs",
                   "q2_acceleration_max_abs"]
+df_valid = df[df["valid"] == 1].copy
