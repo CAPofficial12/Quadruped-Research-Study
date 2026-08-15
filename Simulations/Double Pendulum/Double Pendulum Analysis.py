@@ -39,9 +39,7 @@ def Energy(energy):
     mean = np.mean(energy)
     least = np.min(energy)
     greatest = np.max(np.abs(energy))
-    loss = final - initial
-    relative_loss = loss/abs(initial)
-    energy = [initial, final, std, mean, least, greatest, loss, relative_loss]
+    energy = [initial, final, std, mean, least, greatest]
     return energy
 
 def dom_frep(joint, time):
@@ -62,19 +60,22 @@ def dom_frep(joint, time):
 
 def decay(joint, time):
     peaks,_= signal.find_peaks(joint, prominence = 0.01)
-    peak_time = time[peaks]
 
     amp = np.abs(joint)
     amp_peak,_ = signal.find_peaks(amp, prominence = 0.01)
-    peak_amp = amp[amp_peak]
+    peak_amp = amp.iloc[amp_peak]
+    peak_time = time.iloc[peaks]
 
     pos_amp = peak_amp > 0
-    peak_time_decay = peak_time[pos_amp]
-    peak_amp_decay = peak_amp[pos_amp]
+    peak_time_decay = time.iloc[amp_peak]
+    peak_amp_decay = amp.iloc[amp_peak]
 
     log_amp = np.log(peak_amp_decay)
 
-    regression = stats.linregress(peak_time_decay,log_amp)
+    if len(peak_amp) < 4:
+        return [np.nan, np.nan]
+    else:
+        regression = stats.linregress(peak_time_decay,log_amp)
 
     slope = regression.slope
     r_value = regression.rvalue
@@ -82,7 +83,7 @@ def decay(joint, time):
     decay_rate = -slope
     decay_r2 = r_value ** 2
 
-    decays = [decay, decay_r2]
+    decays = [decay_rate, decay_r2]
     return decays
 
 def oscillations(joint, time):
@@ -100,13 +101,13 @@ def oscillations(joint, time):
     amp_peak,_ = signal.find_peaks(amp, prominence = 0.01)
     peak_amp = amp[amp_peak]
 
-    init_Pamp = peak_amp[0]
-    final_Pamp = peak_amp[-1]
+    init_Pamp = peak_amp.iat[0]
+    final_Pamp = peak_amp.iat[-1]
     mean_Pamp = np.mean(peak_amp)
     std_Pamp = np.std(peak_amp)
 
-    r = decay(joint, time, peak_amp)[0]
-    r2 = decay(joint, time, peak_amp)[1]
+    r = decay(joint, time)[0]
+    r2 = decay(joint, time)[1]
     spring = [dom_frequency, oscil_count, r, r2, init_Pamp, final_Pamp, mean_Pamp,std_Pamp, mean_period, period_std]
     return spring
 
@@ -152,10 +153,16 @@ def summary(test_num):
     Kinetic = Energy(df["kinetic energy"])
     Potential = Energy(df["potential energy"])
     Total = Energy(df["total energy"])
+    initia =df["total energy"].iat[0]
+    final = df["total energy"].iat[-1]
+    loss = final - initia
+    relative_loss = loss/abs(initia)
+    Total.append(loss)
+    Total.append(relative_loss)
 
     #Spring Values
-    Spring_q1 = oscillations(test_num, df["q1"], df["time"])
-    Spring_q2 = oscillations(test_num, df["q2"], df["time"])
+    Spring_q1 = oscillations(df["q1"], df["time"])
+    Spring_q2 = oscillations(df["q2"], df["time"])
 
     #Final Position
     q1_final = df["q1"].iat[-1]
@@ -246,8 +253,6 @@ def main():
             "kinetic_energy_mean",
             "kinetic_energy_min",
             "kinetic_energy_max",
-            "kinetic_energy_loss",
-            "kinetic_energy_relative_loss"
 
             "initial_potential_energy",
             "final_potential_energy",
@@ -255,8 +260,6 @@ def main():
             "potential_energy_mean",
             "potential_energy_min",
             "potential_energy_max",
-            "potential_energy_loss",
-            "potential_energy_relative_loss"
 
             "initial_total_energy",
             "final_total_energy",
@@ -265,7 +268,7 @@ def main():
             "total_energy_min",
             "total_energy_max",
             "total_energy_loss",
-            "total_energy_relative_loss"
+            "total_energy_relative_loss",
 
             "q1_dominant_frequency",
             "q1_oscillation_count",
@@ -300,4 +303,5 @@ def main():
         for i in range(1, 901):
             result = summary(i)
             writer.writerow(result)
+            print("Summarised Test", i)
 main()
