@@ -1,7 +1,6 @@
 <mujoco model="Double">
     <compiler angle="radian" />
     <option timestep = "0.002"
-            energy = "enable"
             integrator = "RK4"/>
     <worldbody>
 
