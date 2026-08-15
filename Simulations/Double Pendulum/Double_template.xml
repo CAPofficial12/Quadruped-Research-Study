@@ -1,7 +1,7 @@
 <mujoco model="Double">
     <compiler angle="radian" />
     <option timestep = "0.002"
-            gravity = "0 0 -9.81"
+            gravity = "0 0 -{G}"
             integrator = "RK4"/>
     <worldbody>
 
@@ -10,32 +10,32 @@
             <joint name = "top_hinge"
                     type = "hinge"
                     axis = "1 0 0"
-                    damping = "0.01"/>
+                    damping = "{C1}"/>
             
             <geom type = "capsule"
-                fromto = "0 0 0 0 0 -1"
+                fromto = "0 0 0 0 0 -{L1}"
                 size = "0.08"
                 rgba = "0 1 0 1"
                 mass="1" />
         
-            <body name="link2" pos = "0 0 -1">
+            <body name="link2" pos = "0 0 -{L1}">
 
                 <joint name = "bottom_hinge"
                         type = "hinge"
                         axis = "1 0 0"
-                        damping = "0.01"/>
+                        damping = "{C2}"/>
                 
                 <geom type = "capsule"
-                    fromto = "0 0 0 0 0 -1"
+                    fromto = "0 0 0 0 0 -{L2}"
                     size = "0.08"
                     rgba = "1 0 0 1"
                     mass="1" />
             
-                <body name = "weight" pos = " 0 0 -1">
+                <body name = "weight" pos = " 0 0 -{L2}">
                     <geom type="sphere" 
                     size="0.15" 
                     rgba = "0.8 0.8 0.8 1"
-                    mass = "2"/>
+                    mass = "{M}"/>
                 </body>
             </body>
         </body>

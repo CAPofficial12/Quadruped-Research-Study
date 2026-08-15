@@ -4,29 +4,70 @@ import numpy as np
 import csv
 from pathlib import Path
 
-script_dir = Path(__file__).resolve().parent
+def create_xml(g, m, l1, l2, c1, c2):
+    script_dir = Path(__file__).resolve().parent
+    template_path = script_dir / "Double_template.xml"
 
-def run_sim(test_num, gravity, duration):
+    with open(template_path, "r", encoding="utf-8") as file:
+        xml = file.read()
 
-    xml_path = script_dir / "Double.xml"
+    xml = xml.replace("{G}", str(g))
+    xml = xml.replace("{L1}", str(l1))
+    xml = xml.replace("{L2}", str(l2))
+    xml = xml.replace("{M}", str(m))
+    xml = xml.replace("{C1}", str(c1))
+    xml = xml.replace("{C2}", str(c2))
 
-    model = mujoco.MjModel.from_xml_path(str(xml_path))
+    test_xml_path = script_dir / "Double.xml"
+
+    with open(test_xml_path, "w", encoding="utf-8") as file:
+        file.write(xml)
+
+def run_sim(test_num, g, m, l1, l2 , c1, c2, q1, q2, duration):
+
+    script_dir = Path(__file__).resolve().parent
+    xml_fullpath = script_dir / f"Double.xml"
+    create_xml(g, m, l1, l2, c1, c2)
+    model = mujoco.MjModel.from_xml_path(str(xml_fullpath))
     data = mujoco.MjData(model)
-    model.opt.gravity[:] = [0, 0, -gravity]
+
     weightID = mujoco.mj_name2id(
-        model,
-        mujoco.mjtObj.mjOBJ_BODY,
-        "weight"
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "weight"
     )
+    TopID = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "top_hinge"
+    )
+    BottomID = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "bottom_hinge"
+    )
+    TopJointID = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "link1"
+    )
+    BottomJointID = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "link2"
+    )
+
     result = []
     vel = np.zeros(6)
     acc = np.zeros(6)
 
-    data.qpos[0] = np.pi/2
-    data.qpos[1] = np.pi/2
+    data.qpos[0] = q1
+    data.qpos[1] = q2
 
     data.qvel[0] = 0.0
     data.qvel[1] = 0.0
+
+    mujoco.mj_forward(model, data)
 
     while data.time < duration:
 
@@ -57,7 +98,12 @@ def run_sim(test_num, gravity, duration):
 
         result.append([
                 data.time,
-                gravity,
+                g,
+                m,
+                l1,
+                l2,
+                c1,
+                c2,
                 data.qpos[0],
                 data.qpos[1],
                 data.qvel[0],
@@ -80,13 +126,18 @@ def run_sim(test_num, gravity, duration):
     
 
     #Adds Full results run timestamp results to Folder
-    csv_fullpath = script_dir / "Full Gravity Results" / f"Double Pendulum. Test {test_num}.csv"
+    csv_fullpath = script_dir / "Full Mass Results" / f"Double Pendulum. Test {test_num}.csv"
     with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
 
         writer.writerow([
             "time",
             "gravity",
+            "weight_mass",
+            "q1_length",
+            "q2_length",
+            "q1_dampening",
+            "q2_dampening",
             "q1",
             "q2",
             "q1_dot",
@@ -108,9 +159,4 @@ def run_sim(test_num, gravity, duration):
         ])
 
         writer.writerows(result)
-
-t = 0
-for gravity in np.arange(0.0,10, 0.01):
-        t += 1
-        run_sim(t, gravity, 15)
-        print("Completed Test: ", t)
+run_sim(1, 9.81, 2, 1, 1, 0.01, 0.01, np.pi/2, np.pi/2, 15)
