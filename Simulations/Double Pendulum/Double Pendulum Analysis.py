@@ -7,17 +7,18 @@ from scipy import signal, stats
 
 def CSV_read(test_num):
     script_dir = Path(__file__).resolve().parent
-    csv_fullpath = script_dir / "Full Results" / f"Double Pendulum. Test {test_num}.csv"
+    csv_fullpath = script_dir / "Full Gravity Results" / f"Double Pendulum. Test {test_num}.csv"
     return pd.read_csv(csv_fullpath)
 
 def intro(test_num):
     df = CSV_read(test_num)
+    gravi = df["gravity"].iat[0]
     q1_initial = df["q1"].iat[0]
     q2_initial = df["q2"].iat[0]
     sim_time = df["time"].iat[-1] - df["time"].iat[0]
     time_step = df["time"].diff().mean()
     valid = True
-    initial_state = [test_num, q1_initial, q2_initial, sim_time, time_step, valid]
+    initial_state = [test_num, gravi, q1_initial, q2_initial, sim_time, time_step, valid]
     return initial_state
 
 def Motion_Stats(values):
@@ -59,32 +60,32 @@ def dom_frep(joint, time):
     return dominant_frequency
 
 def decay(joint, time):
-    peaks,_= signal.find_peaks(joint, prominence = 0.01)
-
     amp = np.abs(joint)
-    amp_peak,_ = signal.find_peaks(amp, prominence = 0.01)
-    peak_amp = amp.iloc[amp_peak]
-    peak_time = time.iloc[peaks]
 
-    pos_amp = peak_amp > 0
+    amp_peak, _ = signal.find_peaks(
+        amp,
+        prominence=0.01
+    )
+
+    peak_amp = amp.iloc[amp_peak]
+
+    if len(peak_amp) < 4:
+        return [np.nan, np.nan]
+
     peak_time_decay = time.iloc[amp_peak]
     peak_amp_decay = amp.iloc[amp_peak]
 
     log_amp = np.log(peak_amp_decay)
 
-    if len(peak_amp) < 4:
-        return [np.nan, np.nan]
-    else:
-        regression = stats.linregress(peak_time_decay,log_amp)
+    regression = stats.linregress(
+        peak_time_decay,
+        log_amp
+    )
 
-    slope = regression.slope
-    r_value = regression.rvalue
+    decay_rate = -regression.slope
+    decay_r2 = regression.rvalue ** 2
 
-    decay_rate = -slope
-    decay_r2 = r_value ** 2
-
-    decays = [decay_rate, decay_r2]
-    return decays
+    return [decay_rate, decay_r2]
 
 def oscillations(joint, time):
     dom_frequency = dom_frep(joint, time)
@@ -100,9 +101,11 @@ def oscillations(joint, time):
     amp = np.abs(joint)
     amp_peak,_ = signal.find_peaks(amp, prominence = 0.01)
     peak_amp = amp[amp_peak]
-
-    init_Pamp = peak_amp.iat[0]
-    final_Pamp = peak_amp.iat[-1]
+    if len(peak_amp) == 0:
+        return [np.nan] * 10
+    else:
+        init_Pamp = peak_amp.iat[0]
+        final_Pamp = peak_amp.iat[-1]
     mean_Pamp = np.mean(peak_amp)
     std_Pamp = np.std(peak_amp)
 
@@ -130,7 +133,7 @@ def summary(test_num):
     weight.append(trajectory_length)
 
     #Weight Speed
-    speed = np.sqrt((df["weight_velx"])**2 + (df["weight_vely"])**2 + (df["weight_velz"])**2)
+    speed = np.sqrt((df["weight_vx"])**2 + (df["weight_vy"])**2 + (df["weight_vz"])**2)
     weight_velocity = Motion_Stats(speed)
 
     #Weight Acceleration
@@ -180,11 +183,12 @@ def summary(test_num):
 
 def main():
     script_dir = Path(__file__).resolve().parent
-    csv_fullpath = script_dir / f"Double Pendulum Summary Statistics.csv"
+    csv_fullpath = script_dir / f"Double Pendulum Gravity Summary Statistics.csv"
     with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
         writer.writerow([
             "test_id",
+            "gravity",
             "q1_initial",
             "q2_initial",
             "simulation_duration",
@@ -300,7 +304,7 @@ def main():
             "final_q2_acceleration"
         ])
 
-        for i in range(1, 901):
+        for i in range(1, 1001):
             result = summary(i)
             writer.writerow(result)
             print("Summarised Test", i)

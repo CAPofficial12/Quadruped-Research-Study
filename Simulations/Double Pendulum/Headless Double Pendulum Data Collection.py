@@ -6,12 +6,13 @@ from pathlib import Path
 
 script_dir = Path(__file__).resolve().parent
 
-def run_sim(test_num, q1, q2, duration):
+def run_sim(test_num, gravity, duration):
 
     xml_path = script_dir / "Double.xml"
 
     model = mujoco.MjModel.from_xml_path(str(xml_path))
     data = mujoco.MjData(model)
+    model.opt.gravity[:] = [0, 0, -gravity]
     weightID = mujoco.mj_name2id(
         model,
         mujoco.mjtObj.mjOBJ_BODY,
@@ -21,8 +22,8 @@ def run_sim(test_num, q1, q2, duration):
     vel = np.zeros(6)
     acc = np.zeros(6)
 
-    data.qpos[0] = q1 + np.pi/2
-    data.qpos[1] = q2
+    data.qpos[0] = np.pi/2
+    data.qpos[1] = np.pi/2
 
     data.qvel[0] = 0.0
     data.qvel[1] = 0.0
@@ -56,6 +57,7 @@ def run_sim(test_num, q1, q2, duration):
 
         result.append([
                 data.time,
+                gravity,
                 data.qpos[0],
                 data.qpos[1],
                 data.qvel[0],
@@ -78,12 +80,13 @@ def run_sim(test_num, q1, q2, duration):
     
 
     #Adds Full results run timestamp results to Folder
-    csv_fullpath = script_dir / "Full Results" / f"Double Pendulum. Test {test_num}.csv"
+    csv_fullpath = script_dir / "Full Gravity Results" / f"Double Pendulum. Test {test_num}.csv"
     with open(csv_fullpath, "w", newline="\n") as file:
         writer = csv.writer(file)
 
         writer.writerow([
             "time",
+            "gravity",
             "q1",
             "q2",
             "q1_dot",
@@ -107,8 +110,7 @@ def run_sim(test_num, q1, q2, duration):
         writer.writerows(result)
 
 t = 0
-for q1 in np.arange(0.0,1.5, 0.05):
-    for q2 in np.arange(0.0,1.5, 0.05):
+for gravity in np.arange(0.0,10, 0.01):
         t += 1
-        run_sim(t, q1, q2, 15)
+        run_sim(t, gravity, 15)
         print("Completed Test: ", t)
