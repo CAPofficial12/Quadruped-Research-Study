@@ -26,7 +26,11 @@ primary_dvs = ["total_energy_relative_loss",
                   "q2_acceleration_max_abs"]
 df_valid = df[df["valid"] == 1].copy
 
-grouped = df.groupby(IV)[primary_dvs].agg(
-    ["mean", "std", "median", "count"]
-)
-grouped.to_csv("DV_summary.csv")
+for i in primary_dvs:
+    plt.scatter(df[IV],
+            df[i])
+
+    plt.xlabel("Mass (kg)")
+    plt.ylabel(i)
+    plt.title("Mass vs "+ i)
+    plt.show()
