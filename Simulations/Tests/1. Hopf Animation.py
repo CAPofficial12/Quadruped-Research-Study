@@ -28,9 +28,9 @@ def update(frame):
     global x, y, Vx, Vy
 
     for _ in range(substep):
-        r = math.sqrt(x**2 + y**2)
-        Vx = (mu - r**2)*x - omega*y
-        Vy = (mu - r**2)*y + omega*x
+        r2 = x**2 + y**2
+        Vx = (mu - r2)*x - omega*y
+        Vy = (mu - r2)*y + omega*x
         x += Vx * dt
         y += Vy * dt
 
