@@ -12,16 +12,16 @@ fps = 60
 substep = int(round((1 / fps) / dt))
 intervl = int(1000 / fps)
 
-x, y = 2, 0
-Vx, Vy = -1, 0
+x, y = 7, 0
+Vx, Vy = -5, 0
 x_data = deque([x], maxlen=3000)
 y_data = deque([y], maxlen=3000)
 mass = 0.5
 damping = 2
 
 fig, ax = plt.subplots()
-ax.set_xlim(-5, 5)
-ax.set_ylim(-5, 5)
+ax.set_xlim(-10, 10)
+ax.set_ylim(-10, 10)
 ax.set_aspect("equal")
 ax.set_xlabel("X Position (m)")
 ax.set_ylabel("Y Position (m)")
