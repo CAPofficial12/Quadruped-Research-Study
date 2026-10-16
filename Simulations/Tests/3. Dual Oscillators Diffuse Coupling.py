@@ -31,7 +31,7 @@ def Hopf(x, y, x2, y2, Vx, Vy, x_data, y_data, c):
     
         x_data.append(x)
         y_data.append(y)
-    return x, y, Vx1, Vy1, x_data, y_data
+    return x, y, Vx, Vy, x_data, y_data
 
 fig, ax = plt.subplots()
 ax.set_xlim(-10, 10)
@@ -49,8 +49,11 @@ def update(frame):
     global x1, y1, Vx1, Vy1, x1_data, y1_data
     global x2, y2, Vx2, Vy2, x2_data, y2_data
 
+    prev_x1, prev_y1 = x1, y1
+    prev_x2, prev_y2 = x2, y2
+
     x1, y1, Vx1, Vy1, x1_data, y1_data = Hopf(x1, y1, x2, y2, Vx1, Vy1, x1_data, y1_data, k12)
-    x2, y2, Vx2, Vy2, x2_data, y2_data = Hopf(x2, y2, x1, y1, Vx2, Vy2, x2_data, y2_data, k21)
+    x2, y2, Vx2, Vy2, x2_data, y2_data = Hopf(prev_x2, prev_y2, prev_x1, prev_x1, Vx2, Vy2, x2_data, y2_data, k21)
 
     point1.set_data([x1], [y1])
     point2.set_data([x2], [y2])
