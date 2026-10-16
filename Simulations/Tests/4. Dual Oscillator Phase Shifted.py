@@ -17,8 +17,8 @@ phase12 = m.pi
 x1_data, y1_data = [x1], [y1]
 
 x2, y2 = 3,0
-k21 = 1
-phase21 = m.pi
+k21 = 0.2
+phase21 = 0
 x2_data, y2_data = [x2], [y2]
 
 current_time = 0
@@ -59,13 +59,13 @@ ax.set_xticks([m.sqrt(mu), -m.sqrt(mu)])
 ax_phase.grid(True, linestyle="--", alpha=0.6)
 
 
-ax_phase.set_xlim(0, 10)
+ax_phase.set_xlim(0, 20)
 ax_phase.set_ylim(-m.pi,m.pi)
 ax_phase.set_xlabel("Time (s)")
 ax_phase.set_ylabel("Phase Difference (rad)")
 ax_phase.set_title("Phase Difference over Time")
 
-ax_phase.set_yticks([-m.pi, -m.pi/2, 0, m.pi/2, m.pi])
+ax_phase.set_yticks([-m.pi, -m.pi/2, -m.pi/4, 0, m.pi/4, m.pi/2, m.pi])
 ax_phase.grid(True, linestyle="--", alpha=0.6)
 phase_line, = ax_phase.plot([], [], "g-", lw=2)
 
