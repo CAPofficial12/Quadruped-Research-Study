@@ -53,7 +53,7 @@ def update(frame):
     prev_x2, prev_y2 = x2, y2
 
     x1, y1, Vx1, Vy1, x1_data, y1_data = Hopf(x1, y1, x2, y2, Vx1, Vy1, x1_data, y1_data, k12)
-    x2, y2, Vx2, Vy2, x2_data, y2_data = Hopf(prev_x2, prev_y2, prev_x1, prev_x1, Vx2, Vy2, x2_data, y2_data, k21)
+    x2, y2, Vx2, Vy2, x2_data, y2_data = Hopf(prev_x2, prev_y2, prev_x1, prev_y1, Vx2, Vy2, x2_data, y2_data, k21)
 
     point1.set_data([x1], [y1])
     point2.set_data([x2], [y2])
