@@ -2,19 +2,14 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-# -----------------------------
-# Simulation settings
-# -----------------------------
 dt = 0.005
 fps = 60
 substep = max(1, round((1 / fps) / dt))
 interval = 1000 / fps
 
-max_points = 500  # Maximum trail length
+max_points = 500
 
-# -----------------------------
-# Matsuoka oscillator 1
-# -----------------------------
+
 x1, x2 = -1.0, 5.0
 y1, y2 = 0.0, 0.0
 z1, z2 = max(0, x1), max(0, x2)
@@ -24,9 +19,7 @@ a12, a21 = 2.0, 2.0
 bt = 2.5
 Taut_x, Taut_y = 0.5, 2.0
 
-# -----------------------------
-# Matsuoka oscillator 2
-# -----------------------------
+
 x3, x4 = 1.0, -5.0
 y3, y4 = 0.0, 0.0
 z3, z4 = max(0, x3), max(0, x4)
