@@ -108,10 +108,6 @@ def update(frame):
 
     return point, trail
 
-
-# -----------------------------
-# Run animation
-# -----------------------------
 ani = animation.FuncAnimation(
     fig,
     update,
