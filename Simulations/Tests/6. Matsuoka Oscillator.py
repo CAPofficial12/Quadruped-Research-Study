@@ -7,9 +7,6 @@ fps = 60
 substep = max(1, round((1 / fps) / dt))
 interval = 1000 / fps
 
-max_points = 500
-
-
 x1, x2 = -1.0, 5.0
 y1, y2 = 0.0, 0.0
 z1, z2 = max(0, x1), max(0, x2)
@@ -52,29 +49,35 @@ def matsuoka(x1, x2, y1, y2, z1, z2,
 
     return x1, x2, y1, y2, z1, z2
 
+
 fig, ax = plt.subplots()
 
-ax.set_xlim(-10, 10)
-ax.set_ylim(-6, 6)
-ax.set_xlabel("Oscillator 1 output")
-ax.set_ylabel("Oscillator 2 output")
-ax.set_title("Two Coupled Matsuoka Oscillators")
+
+ax.set_xlim(-5, 5)
+ax.set_ylim(-5, 5)
+ax.set_aspect("equal", adjustable="box")
+ax.set_xlabel("Knee Angle")
+ax.set_ylabel("Hip Angle")
+ax.set_title("Matsuoka Simulation")
 ax.grid(True, alpha=0.3)
 
-point, = ax.plot([], [], "ro", markersize=8)
-trail, = ax.plot([], [], "r-", alpha=0.5, linewidth=1.5)
+trail, = ax.plot([], [], "r-", alpha=0.6, linewidth=1.5,
+                 label="Angle movement")
+
+point, = ax.plot([], [], "ro", markersize=5)
+
+ax.legend()
 
 
 def init():
-    point.set_data([], [])
     trail.set_data([], [])
-    return point, trail
+    point.set_data([], []) 
+    return trail, point
 
 
 def update(frame):
     global x1, x2, y1, y2, z1, z2
     global x3, x4, y3, y4, z3, z4
-    global x_data, y_data
 
     x1, x2, y1, y2, z1, z2 = matsuoka(
         x1, x2, y1, y2, z1, z2,
@@ -86,20 +89,17 @@ def update(frame):
         sl, a34, a43, bl, Taul_x, Taul_y
     )
 
-    xpos = z2 - z1
-    ypos = z4 - z3
+    output1 = z2 - z1
+    output2 = z4 - z3
 
-    x_data.append(xpos)
-    y_data.append(ypos)
+    x_data.append(output1)
+    y_data.append(output2)
 
-    if len(x_data) > max_points:
-        del x_data[:-max_points]
-        del y_data[:-max_points]
+    trail.set_data(list(x_data), list(y_data))
+    point.set_data([output1], [output2])
 
-    point.set_data([xpos], [ypos])
-    trail.set_data(x_data, y_data)
+    return trail, point
 
-    return point, trail
 
 ani = animation.FuncAnimation(
     fig,
