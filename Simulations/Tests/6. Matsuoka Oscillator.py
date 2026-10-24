@@ -49,7 +49,7 @@ def matsuoka(x1, x2, y1, y2, z1, z2,
 
     return x1, x2, y1, y2, z1, z2
 
-for i in range(5000):
+for i in range(8000):
 
     x1, x2, y1, y2, z1, z2 = matsuoka(
         x1, x2, y1, y2, z1, z2,
@@ -77,7 +77,7 @@ ax.set_ylabel("Hip Angle")
 ax.set_title("Matsuoka Simulation")
 ax.grid(True, alpha=0.3)
 
-ax.plot(x_data, y_data, "r-", alpha=0.6, linewidth=1.5, label="Angle movement")
+ax.plot(x_data[2000:], y_data[2000:], "r-", alpha=0.6, linewidth=1.5, label="Angle movement")
 
 ax.legend()
 plt.show()
