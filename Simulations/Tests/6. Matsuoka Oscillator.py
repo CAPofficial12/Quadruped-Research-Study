@@ -1,6 +1,5 @@
 
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 dt = 0.005
 fps = 60
@@ -28,6 +27,7 @@ Taul_x, Taul_y = 0.5, 2.0
 
 x_data = []
 y_data = []
+Graph_SIZE = 1
 
 def matsuoka(x1, x2, y1, y2, z1, z2,
              s, a12, a21, b, Tx, Ty):
@@ -49,35 +49,7 @@ def matsuoka(x1, x2, y1, y2, z1, z2,
 
     return x1, x2, y1, y2, z1, z2
 
-
-fig, ax = plt.subplots()
-
-
-ax.set_xlim(-5, 5)
-ax.set_ylim(-5, 5)
-ax.set_aspect("equal", adjustable="box")
-ax.set_xlabel("Knee Angle")
-ax.set_ylabel("Hip Angle")
-ax.set_title("Matsuoka Simulation")
-ax.grid(True, alpha=0.3)
-
-trail, = ax.plot([], [], "r-", alpha=0.6, linewidth=1.5,
-                 label="Angle movement")
-
-point, = ax.plot([], [], "ro", markersize=5)
-
-ax.legend()
-
-
-def init():
-    trail.set_data([], [])
-    point.set_data([], []) 
-    return trail, point
-
-
-def update(frame):
-    global x1, x2, y1, y2, z1, z2
-    global x3, x4, y3, y4, z3, z4
+for i in range(5000):
 
     x1, x2, y1, y2, z1, z2 = matsuoka(
         x1, x2, y1, y2, z1, z2,
@@ -95,22 +67,17 @@ def update(frame):
     x_data.append(output1)
     y_data.append(output2)
 
-    trail.set_data(list(x_data), list(y_data))
-    point.set_data([output1], [output2])
+fig, ax = plt.subplots()
 
-    return trail, point
+ax.set_xlim(-Graph_SIZE, Graph_SIZE)
+ax.set_ylim(-Graph_SIZE, Graph_SIZE)
+ax.set_aspect("equal", adjustable="box")
+ax.set_xlabel("Knee Angle")
+ax.set_ylabel("Hip Angle")
+ax.set_title("Matsuoka Simulation")
+ax.grid(True, alpha=0.3)
 
+ax.plot(x_data, y_data, "r-", alpha=0.6, linewidth=1.5, label="Angle movement")
 
-ani = animation.FuncAnimation(
-    fig,
-    update,
-    init_func=init,
-    frames=1000,
-    interval=interval,
-    blit=True,
-    repeat=False,
-    cache_frame_data=False
-)
-
-plt.tight_layout()
+ax.legend()
 plt.show()
