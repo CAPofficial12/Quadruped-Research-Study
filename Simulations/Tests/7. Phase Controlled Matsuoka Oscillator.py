@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 1. Network and Simulation Parameters
-N = 3              # Number of oscillators
-T = 50.0           # Total simulation time
-dt = 0.01          # Time step
+N = 3              
+T = 50.0           
+dt = 0.01          
 steps = int(T / dt)
 
-# 2. Matsuoka Parameters (Tuned for stable limit-cycle oscillations)
+
 tau_r = 0.1
 tau_a = 1.0
 a = 2.5
@@ -15,8 +15,7 @@ b = 2.5
 s_0 = 1.5          # Tonic drive
 K = 0.8            # Kuramoto coupling strength
 
-# 3. Initialize Arrays for State Variables (Shape: N)
-# Slight random variation in initial conditions to observe synchronization behavior
+
 u1 = np.random.uniform(0.1, 0.5, N)
 f1 = np.zeros(N)
 u2 = np.random.uniform(0.1, 0.5, N)
@@ -39,10 +38,10 @@ for step in range(steps):
     
     C = K * R * np.sin(psi - theta)
     
-    du1 = (-u1 - a * y2 - b * f1 + s_0 + C) / tau_r
+    du1 = (-u1 - a * y2 - b * f1 + s_0 + C*u2) / tau_r
     df1 = (-f1 + y1) / tau_a
     
-    du2 = (-u2 - a * y1 - b * f2 + s_0) / tau_r
+    du2 = (-u2 - a * y1 - b * f2 + s_0 + C*u1) / tau_r
     df2 = (-f2 + y2) / tau_a
     
     # Update states
