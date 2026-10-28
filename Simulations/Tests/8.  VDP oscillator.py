@@ -26,10 +26,9 @@ def Solver(a, a_dot, mu, a0):
     a_dot = (sol.y[1] - a)/dt
     a = sol.y[0]
     
-    return sol.y[0]
+    return sol.y[0], sol.y[1], sol.t
 
-y_data = Solver(y1, y1_dot, mu_y, y0)
-x_data = np.linspace(0, end, 1000)
+y_data, y_dotData, x_data = Solver(y1, y1_dot, mu_y, y0)
 
 fig, ax = plt.subplots()
 
