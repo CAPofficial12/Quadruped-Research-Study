@@ -11,7 +11,7 @@ y1, y2 = 0.0, 0.0
 z1, z2 = max(0, x1), max(0, x2)
 
 st = 1.0
-a12, a21 = 2.0, 2.0
+a12, a21 = 2.0, 1.0
 bt = 2.5
 Taut_x, Taut_y = 0.5, 2.0
 
@@ -21,7 +21,7 @@ y3, y4 = 0.0, 0.0
 z3, z4 = max(0, x3), max(0, x4)
 
 sl = 1.0
-a34, a43 = 2.0, 2.0
+a34, a43 = 2.0, 4.0
 bl = 2.5
 Taul_x, Taul_y = 0.5, 2.0
 
@@ -64,12 +64,12 @@ for i in range(8000):
     output1 = z2 - z1
     output2 = z4 - z3
 
-    x_data.append(output1)
-    y_data.append(output2)
+    x_data.append(i/100)
+    y_data.append(output1)
 
 fig, ax = plt.subplots()
 
-ax.set_xlim(-Graph_SIZE, Graph_SIZE)
+ax.set_xlim(20, 40)
 ax.set_ylim(-Graph_SIZE, Graph_SIZE)
 ax.set_aspect("equal", adjustable="box")
 ax.set_xlabel("Knee Angle")
